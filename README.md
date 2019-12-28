@@ -17,3 +17,7 @@ multi-repo --> mono-repo --> multi-repo
 * By performing `switch push`, Switch-repo will perform `git push` to all external repositories.
 
 * By performing `switch run`, Switch-repo will run all services and containers.
+
+# Configuration
+
+For now, it is in `config.js`.

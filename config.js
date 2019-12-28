@@ -9,12 +9,20 @@ const config = {
             }
         }
     },
+    "libraries": { // services might share some code base here
+        "nats-lib": {
+            "location": "libraries/nats"
+        }
+    },
     "services": {
         "gateway": {
             "type": "repo",
             "origin": "git@github.com:goFrendiAsgard/switch-repo-gateway.git",
             "branch": "master",
             "location": "services/gateway",
+            "libraries": {
+                "nats-lib": "services/gateway/nats-lib"
+            },
             "start": "npm install && node start",
         },
         "service": {
@@ -22,6 +30,9 @@ const config = {
             "origin": "git@github.com:goFrendiAsgard/switch-repo-service.git",
             "branch": "master",
             "location": "services/service",
+            "libraries": {
+                "nats-lib": "services/gateway/nats-lib"
+            },
             "start": "npm install && node start",
         },
         "nats": {
