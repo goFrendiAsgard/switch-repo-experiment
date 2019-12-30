@@ -54,7 +54,7 @@ function runCommand(command, option) {
             reject(error);
         }
     })
-    return { promise, proc };
+    return promise;
 }
 
 /**
@@ -74,7 +74,7 @@ async function pull(config) {
         if (component.branch == "") {
             component.branch = "master";
         }
-        const { pCommand: promise } = runCommand("git add . -A && git commit -m 'Save changes'")
+        const pCommand = runCommand("git add . -A && git commit -m 'Save changes'")
             .then(() => { // commit success
                 // git checkout feature/train-test-from-file
                 runCommand(`git fetch && git checkout HEAD && git pull origin HEAD`);
@@ -101,7 +101,7 @@ async function push(config) {
         if (component.origin == "" || component.location == "") {
             continue;
         }
-        const { pCommand: promise } = runCommand("git add . -A && git commit -m 'Save changes before push to remote' && git push -u origin HEAD");
+        const pCommand = runCommand("git add . -A && git commit -m 'Save changes before push to remote' && git push -u origin HEAD");
         promise = promise.then(pCommand);
     }
     return promise;
