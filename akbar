@@ -39,27 +39,31 @@ const path = require("path");
  */
 
 function runCommand(command, option) {
-    // create `proc` and make `promise` to wait until the `proc` closed.
-    console.log(command);
-    const proc = spawn("/bin/bash", ["-c", command], option);
-    proc.stdout.on("data", (data) => {
-        const strData = data.toString("utf8");
-        process.stdout.write(strData);
-    });
-    proc.stderr.on("data", (data) => {
-        const strData = data.toString("utf8");
-        process.stderr.write(strData);
-    });
-    const promise = new Promise((resolve, reject) => {
-        try {
-            proc.on("close", (code) => {
-                resolve(code);
-            });
-        } catch (error) {
-            reject(error);
-        }
-    })
-    return promise;
+    try {
+        // create `proc` and make `promise` to wait until the `proc` closed.
+        console.log(command);
+        const proc = spawn("/bin/bash", ["-c", command], option);
+        proc.stdout.on("data", (data) => {
+            const strData = data.toString("utf8");
+            process.stdout.write(strData);
+        });
+        proc.stderr.on("data", (data) => {
+            const strData = data.toString("utf8");
+            process.stderr.write(strData);
+        });
+        const promise = new Promise((resolve, reject) => {
+            try {
+                proc.on("close", (code) => {
+                    resolve(code);
+                });
+            } catch (error) {
+                reject(error);
+            }
+        })
+        return promise;
+    } catch (error) {
+        return new Promise((resolve, reject) => reject(error));
+    }
 }
 
 /**
