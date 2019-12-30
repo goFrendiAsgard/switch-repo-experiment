@@ -314,13 +314,27 @@ async function main() {
     const command = process.argv[2];
     const args = process.argv.slice(3);
     const config = require('./config.json'); // TODO: ini entar baca dari environment aja
-    await synchronizeLink(config);
     switch (command) {
-        case "pull": await pull(config); break;
-        case "push": await push(config, args); break;
-        case "run": await run(config); break;
-        case "checkout": await checkout(config, args); break;
-        case "merge": await merge(config, args); break;
+        case "pull":
+            await pull(config);
+            await synchronizeLink(config);
+            break;
+        case "push":
+            await synchronizeLink(config);
+            await push(config, args);
+            break;
+        case "run":
+            await synchronizeLink(config);
+            await run(config);
+            break;
+        case "checkout":
+            await checkout(config, args);
+            await synchronizeLink(config);
+            break;
+        case "merge":
+            await merge(config, args);
+            await synchronizeLink(config);
+            break;
         default: throw new Error("invalid command");
     }
     return true;
