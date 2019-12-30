@@ -34,28 +34,17 @@ const { spawn } = require('child_process');
  * @property {string[]} executions - Components execution order.
  */
 
-/**
- * runCommand run a command
- * @param {string} serviceName - Name of the service (i.e: how the command is aliased)
- * @param {string} command  - The command
- * @param {Environments} environments - Environments
- */
-function runCommand(serviceName, command, environments) {
-    const flattenEnv = {};
-    for (let key in environments.general) {
-        flattenEnv[key] = environments.general[key];
-    }
-    for (let key in environments.services[serviceName]) {
-        flattenEnv[key] = environments.services[serviceName][key];
-    }
+function runCommand(command, option) {
     // create `proc` and make `promise` to wait until the `proc` closed.
-    const proc = spawn("/bin/bash", ["-c", command], flattenEnv);
+    const proc = spawn("/bin/bash", ["-c", command], option);
     proc.stdout.on("data", (data) => {
-        console.log(serviceName + " " + data.toString("utf8"));
+        const strData = data.toString("utf8");
+        process.stdout.write(strData);
     });
     proc.stderr.on("data", (data) => {
-        console.log(serviceName + " " + data.toString("utf8"));
-    })
+        const strData = data.toString("utf8");
+        process.stderr.write(strData);
+    });
     const promise = new Promise((resolve, reject) => {
         try {
             proc.on("close", (code) => {
@@ -68,54 +57,129 @@ function runCommand(serviceName, command, environments) {
     return { promise, proc };
 }
 
-
 /**
- * pull all `component` in config that has `repo` type
+ * pull all repo and libraries
  * @param {Config} config - configuration
  */
 async function pull(config) {
-    console.log("pull", config);
+    const promises = [];
+    for (let componentName in config.components) {
+        const component = config.components[componentName];
+        if (["repo", "library"].indexOf(component.type) == -1) {
+            continue;
+        }
+        if (component.origin == "" || component.location == "") {
+            continue;
+        }
+        if (component.branch == "") {
+            component.branch = "master";
+        }
+        const { promise } = runCommand("git add . -A && git commit -m 'Save changes'")
+            .then(() => { // commit success
+                // git checkout feature/train-test-from-file
+                runCommand(`git fetch && git checkout HEAD && git pull origin HEAD`);
+            })
+            .catch(() => { // commit failed, assuming directory not exists
+                runCommand(`git clone ${component.origin} ${component.location} && git checkout -b ${component.branch}`);
+            });
+        promises.push(promise);
+    }
+    return Promise.all(promises);
 }
 
 /**
- * push all `component` in config that has `repo` type 
+ * push all repo and libraries 
  * @param {Config} config - configuration
  */
 async function push(config) {
-    console.log("push", config);
+    const promises = [];
+    for (let componentName in config.components) {
+        const component = config.components[componentName];
+        if (["repo", "library"].indexOf(component.type) == -1) {
+            continue;
+        }
+        if (component.origin == "" || component.location == "") {
+            continue;
+        }
+        const { promise } = runCommand("git add . -A && git commit -m 'Save changes before push to remote' && git push -u origin HEAD");
+        promises.push(promise);
+    }
+    return Promise.all(promises);
 }
 
 /**
- * run service `component` in config that has `repo` type 
+ * run command of a component
+ * @param {string} serviceName - Name of the service (i.e: how the command is aliased)
+ * @param {string} command  - The command
+ * @param {Config} config - configuration
+ */
+function runComponentCommand(serviceName, command, config) {
+    const cwd = config.components[serviceName].location;
+    const env = {};
+    for (let key in process.env) {
+        env[key] = process.env[key];
+    }
+    for (let key in config.environments.general) {
+        env[key] = config.environments.general[key];
+    }
+    for (let key in config.environments.services[serviceName]) {
+        env[key] = config.environments.services[serviceName][key];
+    }
+    // create `proc` and make `promise` to wait until the `proc` closed.
+    const proc = spawn("/bin/bash", ["-c", command], { cwd, env });
+    proc.stdout.on("data", (data) => {
+        const strData = data.toString("utf8");
+        const utcString = new Date().toISOString();
+        process.stdout.write(`[LOG ${utcString} ${serviceName}] ${strData}`);
+    });
+    proc.stderr.on("data", (data) => {
+        const strData = data.toString("utf8");
+        const utcString = new Date().toISOString();
+        process.stderr.write(`[ERR ${utcString} ${serviceName}] ${strData}`);
+    });
+    const promise = new Promise((resolve, reject) => {
+        try {
+            proc.on("close", (code) => {
+                resolve(code);
+            });
+        } catch (error) {
+            reject(error);
+        }
+    })
+    return { promise, proc };
+}
+
+/**
+ * run repo component
  * @param {string} serviceName - Name of the service (i.e: how the command is aliased)
  * @param {Repo} component - component
- * @param {Environments} environments - Environments
+ * @param {Config} config - config
  */
-function runService(serviceName, component, environments) {
+function runRepoComponent(serviceName, component, config) {
     const command = component.start;
-    return runCommand(serviceName, command, environments);
+    return runComponentCommand(serviceName, command, config);
 }
 
 /**
- * run service `component` in config that has `container` type 
+ * run container component
  * @param {string} serviceName - Name of the service (i.e: how the command is aliased)
  * @param {Container} component - component
- * @param {Environments} environments - Environments
+ * @param {Config} config - config
  */
-function runContainer(serviceName, component, environments) {
+function runContainerComponent(serviceName, component, config) {
     const command = `${component.start} || ${component.run}`;
-    return runCommand(serviceName, command, environments);
+    return runComponentCommand(serviceName, command, config);
 }
 
 /**
- * 
+ * get runner for component
  * @param {Repo | Container | Library} component  - component
  */
-function getRunner(component) {
+function getComponentRunner(component) {
     switch (component.type) {
-        case "container": return runContainer;
-        case "repo": return runService;
-        default: return runService;
+        case "container": return runContainerComponent;
+        case "repo": return runRepoComponent;
+        default: return runRepoComponent;
     }
 }
 
@@ -143,14 +207,13 @@ async function run(config) {
     });
     promises.push(pControl);
     // add all service processes
-    const environments = config.environments;
     for (let serviceName of config.executions) {
         const component = config.components[serviceName];
         if (["repo", "container"].indexOf(component.type) == -1) {
             continue;
         }
-        const runner = getRunner(component);
-        const { promise, proc } = runner(serviceName, component, environments);
+        const runner = getComponentRunner(component);
+        const { promise, proc } = runner(serviceName, component, config);
         promises.push(promise);
         procs.push(proc)
     }
