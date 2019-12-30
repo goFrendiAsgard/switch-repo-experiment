@@ -1,11 +1,16 @@
 {
     "environments": {
         "general": {
-            "nats-url": "nats://nats.io:4222"
+            "natsUrl": "nats://nats.io:4222",
+            "getMessageEvent": "foo",
+            "sendMessageEvent": "bar"
         },
         "services": {
             "gateway": {
                 "port": 3000
+            },
+            "service": {
+                "message": "noob"
             }
         }
     },

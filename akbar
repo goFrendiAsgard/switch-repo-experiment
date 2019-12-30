@@ -209,14 +209,14 @@ function runComponentCommand(serviceName, command, config) {
     // create `proc` and make `promise` to wait until the `proc` closed.
     const proc = spawn("/bin/bash", ["-c", command], { cwd, env });
     proc.stdout.on("data", (data) => {
-        const strData = data.toString("utf8");
+        const strData = data.toString("utf8").trim();
         const utcString = new Date().toISOString();
-        process.stdout.write(`[STDOUT ${utcString} ${serviceName}] ${strData}`);
+        console.log(`[STDOUT ${utcString} ${serviceName}] ${strData}`);
     });
     proc.stderr.on("data", (data) => {
-        const strData = data.toString("utf8");
+        const strData = data.toString("utf8").trim();
         const utcString = new Date().toISOString();
-        process.stderr.write(`[STDERR ${utcString} ${serviceName}] ${strData}`);
+        console.error(`[STDERR ${utcString} ${serviceName}] ${strData}`);
     });
     const promise = new Promise((resolve, reject) => {
         try {
@@ -308,7 +308,7 @@ async function main() {
     }
     const command = process.argv[2];
     const args = process.argv.slice(3);
-    const config = require('./config.json');
+    const config = require('./config.json'); // TODO: ini entar baca dari environment aja
     await synchronizeLink(config);
     switch (command) {
         case "pull": await pull(config); break;
