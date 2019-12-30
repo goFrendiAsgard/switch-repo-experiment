@@ -113,6 +113,8 @@ async function pull(config) {
         }
         const cwd = component.location;
         console.log(`[PULL ${componentName}]`);
+
+        await runCommand(`mkdir -p ${component.location} && git clone ${component.origin} ${component.location} && cd ${component.location} && git checkout -b ${component.branch}`);
         try {
             await runCommand(`git add . -A && git commit -m "${comment}"`, { cwd });
             await runCommand(`git fetch && git checkout HEAD && git pull origin HEAD`, { cwd });
