@@ -11,7 +11,7 @@ exports.config = {
     },
     "components": {
         "gateway": {
-            "type": "repo",
+            "type": "service",
             "origin": "git@github.com:goFrendiAsgard/switch-repo-gateway.git",
             "branch": "master",
             "location": "services/gateway",
@@ -21,7 +21,7 @@ exports.config = {
             "start": "npm install && node start",
         },
         "service": {
-            "type": "repo",
+            "type": "service",
             "origin": "git@github.com:goFrendiAsgard/switch-repo-service.git",
             "branch": "master",
             "location": "services/service",
