@@ -21,14 +21,14 @@
         },
         "gateway": {
             "type": "service",
-            "origin": "git@github.com:goFrendiAsgard/switch-repo-gateway.git",
+            "origin": "git://git@github.com:goFrendiAsgard/switch-repo-gateway.git",
             "branch": "master",
             "location": "./services/gateway",
             "start": "npm install && node start"
         },
         "service": {
             "type": "service",
-            "origin": "git@github.com:goFrendiAsgard/switch-repo-service.git",
+            "origin": "git://git@github.com:goFrendiAsgard/switch-repo-service.git",
             "branch": "master",
             "location": "./services/service",
             "links": {
