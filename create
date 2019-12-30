@@ -9,5 +9,9 @@ fi
 
 mkdir -p ${PROJECT_DIR}
 
-echo ${BASE_DIR}/akbar ${PROJECT_DIR}/akbar
-echo ${BASE_DIR}/config.template.json ${PROJECT_DIR}/config.json
+cp ${BASE_DIR}/akbar ${PROJECT_DIR}/akbar
+cp ${BASE_DIR}/package.json ${PROJECT_DIR}/package.json
+cp ${BASE_DIR}/config.template.json ${PROJECT_DIR}/config.json
+cd ${PROJECT_DIR}
+git init
+npm install

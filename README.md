@@ -1,23 +1,158 @@
-# Switch Repo
+# Switch Repo (aka: Akbar)
 
-Embracing monorepo without abandoning multi-repo
+Embrace monorepo without abandon multi-repo
 
 ```
 multi-repo --> mono-repo --> multi-repo
+(pull)         (coding)      (push back)
 ```
 
-# Use Case
+# Problem
 
-* You already have several repos. You know merging them into mono-repo could give you some advantages, however some of your repos are private, and some others are open-source. You cannot just mix them up into a single mono-repo.
+You already have several repos. You know merging them into mono-repo could give you some advantages, however some of your repos are private, and some others are open-source. You cannot just mix them up into a single mono-repo.
 
-* Switch-repo let you enlist your external repositories in a json file.
+You believe monorepo is easier to manage. You want to do code-review in a single PR, not multiple of them. But you are afraid to fully embrace mono-repo.
 
-* By performing `node main.js pull`, Switch-repo will perform `git commit` (if repo exists) then delete all external repositories and re-clone them.
+__TL;DR__ : You want monorepo, you don't want to abandon multi-repo, and you have a very good reason for that.
 
-* By performing `node main.js push`, Switch-repo will perform `git push` to all external repositories.
+# Demo
 
-* By performing `node main.js run`, Switch-repo will run all services and containers.
+## Clone this repo
 
-# Configuration
+```sh
+git clone git@github.com:goFrendiAsgard/switch-repo-experiment.git ~/akbar
+```
 
-For now, it is in `config.json`.
+## Create an empty project
+
+```sh
+# create project
+cd ~/akbar
+./create ~/myProject
+
+cd ~/myProject
+```
+
+## Add origin
+
+After creating an empty project in your computer, you should make a remote repository on your git server and link it to your project:
+
+```sh
+git remote add origin git@github.com:<your-user>/<your-repo>.git
+```
+
+## Fork multi-repo example
+
+Open github and fork the following repositories:
+
+```
+https://github.com/goFrendiAsgard/switch-repo-service
+https://github.com/goFrendiAsgard/switch-repo-gateway
+```
+
+## Create configuration
+
+```sh
+vim ./config.json # or code ./config.json
+```
+
+At the beginning, the configuration might looks like this:
+
+```json
+{
+    "environments": {
+        "general": {},
+        "services": {}
+    },
+    "components": {},
+    "executions": []
+}
+```
+
+Now, edit your configuration to match this:
+
+```json
+// WARNING: Please remove every comment in this file. JSON doesn't support comments.
+{
+    "environments": { // Environment shared for every services
+        "general": { // General environment, shared among services
+            "natsUrl": "nats://nats.io:4222",
+            "getMessageEvent": "foo",
+            "sendMessageEvent": "bar"
+        },
+        "services": {
+            "gateway": { // Specific environment for `gateway` service.
+                "port": 3000
+            },
+            "service": { // Specific environment for `service` service.
+                "message": "noob"
+            }
+        }
+    },
+    "components": { // Components of this "monorepo" project
+        "calculator": { // A library, we wil add this later. Can be shared among services via `service.links`
+            "type": "library",
+            "location": "./libraries/calculator" // physical location, relative to the project
+        },
+        "gateway": { // A gateway service (will be fetched from your repo). This service will listen to HTTP request, send message to NATS, waiting for reply, and show serve response.
+            "type": "service",
+            "origin": "git@github.com:goFrendiAsgard/switch-repo-gateway.git", // Make sure you change this one to match yours
+            "branch": "master",
+            "location": "./services/gateway", // physical location, relative to the project
+            "start": "npm install && node start"
+        },
+        "service": { // Core service, This service will listen to NATS and publish response.
+            "type": "service",
+            "origin": "git@github.com:goFrendiAsgard/switch-repo-service.git", // Make sure you change this one to match yours
+            "branch": "master",
+            "location": "./services/service", // physical location, relative to the project
+            "links": {
+                "calculator": { // this service is depend on calculator library
+                    "from": "./add.js",
+                    "to": "./add.js"
+                }
+            },
+            "start": "npm install && node start"
+        },
+        "nats": { // Nats docker container definition
+            "type": "container",
+            "run": "docker run --name nats -p 4222:4222 -p 6222:6222 -p 8222:8222 -d nats",
+            "containerName": "nats"
+        }
+    },
+    "executions": [ // The running order of the services
+        "nats",
+        "service",
+        "gateway"
+    ]
+}
+```
+
+## Create library
+
+```sh
+mkdir -p ./libraries/calculator
+vim ./libraries/calculator/add.js # or code ./libraries/calculator/add.js
+```
+
+```javascript
+// this is the content of `add.js`
+module.exports = (a, b) => a + b;
+```
+
+## Pull
+
+```sh
+./akbar pull
+```
+##  Run
+
+```sh
+./akbar run
+```
+
+## Push
+
+```sh
+./akbar push
+```
