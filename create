@@ -1,0 +1,13 @@
+#!/bin/sh
+
+BASE_DIR=$(dirname "$0")
+PROJECT_DIR=${1}
+if [ ${PROJECT_DIR} = "" ]
+then
+    PROJECT_DIR="."
+fi
+
+mkdir -p ${PROJECT_DIR}
+
+echo ${BASE_DIR}/akbar ${PROJECT_DIR}/akbar
+echo ${BASE_DIR}/config.template.json ${PROJECT_DIR}/config.json

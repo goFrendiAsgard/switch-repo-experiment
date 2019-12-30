@@ -1,0 +1,9 @@
+#!/bin/sh
+
+BASE_DIR=$(dirname "$0")
+
+rm -Rf ${BASE_DIR}/services
+
+./akbar pull
+./akbar push
+./akbar run
