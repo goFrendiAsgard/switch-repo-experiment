@@ -33,6 +33,8 @@ cd ~/akbar
 cd ~/myProject
 ```
 
+![Create](./images/akbar-create.PNG)
+
 ## Add origin
 
 After creating an empty project in your computer, you should make a remote repository on your git server and link it to your project:
@@ -142,17 +144,30 @@ module.exports = (a, b) => a + b;
 
 ## Pull
 
+Now, eveerything is ready. Time to fetch some codes from multi-repos.
+
 ```sh
 ./akbar pull
 ```
+
+![Pull](./images/akbar-pull.PNG)
+
 ##  Run
+
+Finally, the most exciting thing for developers: run everything in a single screen. Running micro-services in your machine is now this easy.
 
 ```sh
 ./akbar run
 ```
 
+![Run](./images/akbar-run.PNG)
+
 ## Push
+
+You can try to change the code, run it, and push it into every single repositories you've enlisted.
 
 ```sh
 ./akbar push
 ```
+
+![Push](./images/akbar-push.PNG)
