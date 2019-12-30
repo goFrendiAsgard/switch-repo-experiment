@@ -111,12 +111,12 @@ async function pull(config) {
         if (component.branch == "") {
             component.branch = "master";
         }
-        const cwd = component.location;
-        console.log(`[PULL ${componentName}]`);
-        try {
+        if (fs.existsSync(component.location)) {
+            const cwd = component.location;
             await runCommand(`git add . -A && git commit -m "${comment}"`, { cwd });
+            console.log(`[PULL ${componentName}]`);
             await runCommand(`git fetch && git checkout HEAD && git pull origin HEAD`, { cwd });
-        } catch (error) {
+        } else {
             await runCommand(`git clone ${component.origin} ${component.location} && cd ${component.location} && git checkout ${component.branch}`);
         }
     }
