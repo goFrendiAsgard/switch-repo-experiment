@@ -1,4 +1,4 @@
-const config = {
+exports.config = {
     "environments": {
         "general": { // works for all services
             "nats-url": "nats://nats.io:4222",
@@ -9,18 +9,13 @@ const config = {
             }
         }
     },
-    "libraries": { // services might share some code base here
-        "nats-lib": {
-            "location": "libraries/nats"
-        }
-    },
-    "services": {
+    "components": {
         "gateway": {
             "type": "repo",
             "origin": "git@github.com:goFrendiAsgard/switch-repo-gateway.git",
             "branch": "master",
             "location": "services/gateway",
-            "libraries": {
+            "link": {
                 "nats-lib": "services/gateway/nats-lib"
             },
             "start": "npm install && node start",
@@ -30,7 +25,7 @@ const config = {
             "origin": "git@github.com:goFrendiAsgard/switch-repo-service.git",
             "branch": "master",
             "location": "services/service",
-            "libraries": {
+            "link": {
                 "nats-lib": "services/gateway/nats-lib"
             },
             "start": "npm install && node start",
@@ -39,6 +34,10 @@ const config = {
             "type": "container",
             "run": "docker run --name nats -p 4222:4222 -p 6222:6222 -p 8222:8222 -d nats",
             "start": "docker start nats",
+        },
+        "nats-lib": {
+            "type": "library",
+            "location": "libraries/nats"
         }
     },
     "executions": [
@@ -46,4 +45,4 @@ const config = {
         "service",
         "gateway",
     ],
-}
+};
