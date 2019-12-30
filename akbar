@@ -112,7 +112,7 @@ async function pull(config) {
             await runCommand(`git add . -A && git commit -m "${comment}"`, { cwd });
             await runCommand(`git fetch && git checkout HEAD && git pull origin HEAD`, { cwd });
         } catch (error) {
-            await runCommand(`git clone ${component.origin} ${component.location} && git checkout -b ${component.branch}`, { cwd });
+            await runCommand(`git clone ${component.origin} ${component.location} && git checkout -b ${component.branch}`);
         }
     }
 }
