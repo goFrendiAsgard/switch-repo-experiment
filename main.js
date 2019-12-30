@@ -62,7 +62,6 @@ function runCommand(command, option) {
  * @param {Config} config - configuration
  */
 async function pull(config) {
-    let promise = new Promise((resolve, reject) => resolve());
     for (let componentName in config.components) {
         const component = config.components[componentName];
         if (["repo", "library"].indexOf(component.type) == -1) {
@@ -74,7 +73,8 @@ async function pull(config) {
         if (component.branch == "") {
             component.branch = "master";
         }
-        const pCommand = runCommand("git add . -A && git commit -m 'Save changes'")
+        console.log(componentName);
+        await runCommand("git add . -A && git commit -m 'Save changes'")
             .then(() => { // commit success
                 // git checkout feature/train-test-from-file
                 runCommand(`git fetch && git checkout HEAD && git pull origin HEAD`);
@@ -82,9 +82,7 @@ async function pull(config) {
             .catch(() => { // commit failed, assuming directory not exists
                 runCommand(`git clone ${component.origin} ${component.location} && git checkout -b ${component.branch}`);
             });
-        promise = promise.then(pCommand);
     }
-    return promise;
 }
 
 /**
@@ -92,7 +90,6 @@ async function pull(config) {
  * @param {Config} config - configuration
  */
 async function push(config) {
-    let promise = new Promise((resolve, reject) => resolve());
     for (let componentName in config.components) {
         const component = config.components[componentName];
         if (["repo", "library"].indexOf(component.type) == -1) {
@@ -101,10 +98,9 @@ async function push(config) {
         if (component.origin == "" || component.location == "") {
             continue;
         }
-        const pCommand = runCommand("git add . -A && git commit -m 'Save changes before push to remote' && git push -u origin HEAD");
-        promise = promise.then(pCommand);
+        console.log(componentName);
+        await runCommand("git add . -A && git commit -m 'Save changes before push to remote' && git push -u origin HEAD");
     }
-    return promise;
 }
 
 /**
