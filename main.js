@@ -74,16 +74,17 @@ async function pull(config) {
             component.branch = "master";
         }
         const cwd = component.location;
-        console.log(`PULL ${componentName}`);
-        await runCommand("git add . -A && git commit -m 'Save changes'", { cwd })
-            .then(() => { // commit success
-                // git checkout feature/train-test-from-file
-                runCommand(`git fetch && git checkout HEAD && git pull origin HEAD`, { cwd });
-            })
-            .catch(() => { // commit failed, assuming directory not exists
-                runCommand(`git clone ${component.origin} ${component.location} && git checkout -b ${component.branch}`, { cwd });
-            });
+        console.log(`[PULL ${componentName}]`);
+        try {
+            await runCommand("git add . -A && git commit -m 'Save changes'", { cwd });
+            await runCommand(`git fetch && git checkout HEAD && git pull origin HEAD`, { cwd });
+        } catch (error) {
+            await runCommand(`git clone ${component.origin} ${component.location} && git checkout -b ${component.branch}`, { cwd });
+        }
     }
+    console.log(`[PULL MONOREPO]`);
+    await runCommand("git add . -A && git commit -m 'Save changes'");
+    await runCommand(`git fetch && git checkout HEAD && git pull origin HEAD`);
 }
 
 /**
@@ -100,9 +101,11 @@ async function push(config) {
             continue;
         }
         const cwd = component.location;
-        console.log(`PUSH ${componentName}`);
+        console.log(`[PUSH ${componentName}]`);
         await runCommand("git add . -A && git commit -m 'Save changes before push to remote' && git push -u origin HEAD", { cwd });
     }
+    console.log(`[PUSH MONOREPO]`);
+    await runCommand("git add . -A && git commit -m 'Save changes before push to remote' && git push -u origin HEAD");
 }
 
 /**
