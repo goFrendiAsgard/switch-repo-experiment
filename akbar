@@ -40,6 +40,7 @@ const path = require("path");
 
 function runCommand(command, option) {
     // create `proc` and make `promise` to wait until the `proc` closed.
+    console.log(command);
     const proc = spawn("/bin/bash", ["-c", command], option);
     proc.stdout.on("data", (data) => {
         const strData = data.toString("utf8");
