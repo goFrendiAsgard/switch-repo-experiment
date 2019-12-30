@@ -62,7 +62,7 @@ function runCommand(command, option) {
  * @param {Config} config - configuration
  */
 async function pull(config) {
-    const promises = [];
+    let promise = new Promise((resolve, reject) => resolve());
     for (let componentName in config.components) {
         const component = config.components[componentName];
         if (["repo", "library"].indexOf(component.type) == -1) {
@@ -74,7 +74,7 @@ async function pull(config) {
         if (component.branch == "") {
             component.branch = "master";
         }
-        const { promise } = runCommand("git add . -A && git commit -m 'Save changes'")
+        const { pCommand: promise } = runCommand("git add . -A && git commit -m 'Save changes'")
             .then(() => { // commit success
                 // git checkout feature/train-test-from-file
                 runCommand(`git fetch && git checkout HEAD && git pull origin HEAD`);
@@ -82,9 +82,9 @@ async function pull(config) {
             .catch(() => { // commit failed, assuming directory not exists
                 runCommand(`git clone ${component.origin} ${component.location} && git checkout -b ${component.branch}`);
             });
-        promises.push(promise);
+        promise = promise.then(pCommand);
     }
-    return Promise.all(promises);
+    return promise;
 }
 
 /**
@@ -92,7 +92,7 @@ async function pull(config) {
  * @param {Config} config - configuration
  */
 async function push(config) {
-    const promises = [];
+    let promise = new Promise((resolve, reject) => resolve());
     for (let componentName in config.components) {
         const component = config.components[componentName];
         if (["repo", "library"].indexOf(component.type) == -1) {
@@ -101,10 +101,10 @@ async function push(config) {
         if (component.origin == "" || component.location == "") {
             continue;
         }
-        const { promise } = runCommand("git add . -A && git commit -m 'Save changes before push to remote' && git push -u origin HEAD");
-        promises.push(promise);
+        const { pCommand: promise } = runCommand("git add . -A && git commit -m 'Save changes before push to remote' && git push -u origin HEAD");
+        promise = promise.then(pCommand);
     }
-    return Promise.all(promises);
+    return promise;
 }
 
 /**
