@@ -73,6 +73,7 @@ async function pull(config) {
         if (component.origin == "" || component.location == "") {
             continue;
         }
+        console.log(component.origin == "", component.location == "", component);
         if (component.branch == "") {
             component.branch = "master";
         }
