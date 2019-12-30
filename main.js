@@ -58,12 +58,10 @@ function runCommand(command, option) {
 /**
  * pull all services and libraries
  * @param {Config} config - configuration
- * @param {string[]} args - arguments
  */
-async function pull(config, args) {
+async function pull(config) {
     const utcString = new Date().toISOString();
-    const rawComment = args.length > 0 ? args[1] : "Save changes"
-    const comment = `${utcString} ${rawComment}`;
+    const comment = `${utcString} Save Changes`;
     console.log(`[PULL MONOREPO]`);
     await runCommand(`git add . -A && git commit -m "${comment}"`);
     await runCommand(`git fetch && git checkout HEAD && git pull origin HEAD`);
@@ -282,11 +280,11 @@ async function main() {
     const args = process.argv.slice(3);
     const config = configuration.config;
     switch (command) {
-        case "pull": await pull(config, args); break;
+        case "pull": await pull(config); break;
         case "push": await push(config, args); break;
         case "run": await run(config); break;
-        case "checkout": await checkout(config); break;
-        case "merge": await merge(config); break;
+        case "checkout": await checkout(config, args); break;
+        case "merge": await merge(config, args); break;
         default: console.error("invalid command");
     }
     return true;
