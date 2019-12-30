@@ -73,7 +73,7 @@ At the beginning, the configuration might looks like this:
 
 Now, edit your configuration to match this:
 
-```json
+```javascript
 // WARNING: Please remove every comment in this file. JSON doesn't support comments.
 {
     "environments": { // Environment shared for every services
