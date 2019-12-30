@@ -70,7 +70,7 @@ async function pull(config) {
         if (["service", "library"].indexOf(component.type) == -1) {
             continue;
         }
-        if (component.origin == "" || component.location == "") {
+        if (!component.origin || !component.location) {
             continue;
         }
         console.log(component.origin == "", component.location == "", component);
