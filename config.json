@@ -27,7 +27,10 @@
             "branch": "master",
             "location": "./services/service",
             "links": {
-                "calculator": "lib/calculator"
+                "calculator": {
+                    "from": ".",
+                    "to": "lib/calculator"
+                }
             },
             "start": "npm install && node start"
         },

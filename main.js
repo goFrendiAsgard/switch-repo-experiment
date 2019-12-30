@@ -6,6 +6,10 @@ const path = require("path");
  * @typedef {Object} Environments
  * @property {Map<string, string>} general - General environment
  * @property {Map<string, Map<string, string>} services - Per-service environment
+ *
+ * @typedef {Object} Link 
+ * @property {string} from - location of the files/directories relative to library
+ * @property {string} to - location of the files/directories relative to current component
  * 
  * @typedef {Object} Service
  * @property {string} type - Component type to indicate that this is a `service` should be "service"
@@ -67,12 +71,13 @@ async function synchronizeLink(config) {
             continue;
         }
         for (let otherServiceName in currentComponent.links) {
+            const link = currentComponent.links[otherServiceName];
             otherComponent = config.components[otherServiceName];
             if (!otherComponent) {
                 continue;
             }
-            const currentLocation = path.join(currentComponent.location, currentComponent.links[otherServiceName]);
-            const otherLocation = otherComponent.location;
+            const currentLocation = path.join(currentComponent.location, link.to);
+            const otherLocation = path.join(otherComponent.location, link.from);
             console.log(`Copy ${otherLocation} to ${currentLocation}`)
             await fs.copy(otherLocation, currentLocation);
         }
