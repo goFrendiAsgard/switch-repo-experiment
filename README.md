@@ -1,6 +1,6 @@
 # Switch Repo
 
-Get the best of mono-repo and multi-repo.
+Embracing monorepo without abandoning multi-repo
 
 ```
 multi-repo --> mono-repo --> multi-repo
@@ -16,8 +16,8 @@ multi-repo --> mono-repo --> multi-repo
 
 * By performing `node main.js push`, Switch-repo will perform `git push` to all external repositories.
 
-* By performing `switch run`, Switch-repo will run all services and containers.
+* By performing `node main.js run`, Switch-repo will run all services and containers.
 
 # Configuration
 
-For now, it is in `config.js`.
+For now, it is in `config.json`.

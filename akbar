@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const { spawn } = require("child_process");
 const fs = require("fs-extra");
 const path = require("path");
@@ -315,7 +316,7 @@ async function main() {
         case "run": await run(config); break;
         case "checkout": await checkout(config, args); break;
         case "merge": await merge(config, args); break;
-        default: console.error("invalid command");
+        default: throw new Error("invalid command");
     }
     return true;
 }
