@@ -1,5 +1,5 @@
-const http = require('http');
-const NATS = require('nats');
+const http = require("http");
+const NATS = require("nats");
 const nats = NATS.connect();
 
 const port = process.env.port || 80;

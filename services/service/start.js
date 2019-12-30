@@ -1,4 +1,5 @@
-const NATS = require('nats');
+const add = require("./add")
+const NATS = require("nats");
 const nats = NATS.connect();
 
 const subscribeEvent = process.env.getMessageEvent || "foo";
@@ -8,7 +9,8 @@ const constantMessage = process.env.message || "et dah";
 console.log(`Listen to ${subscribeEvent} event`);
 nats.subscribe(subscribeEvent, (receivedMessage) => {
     console.log(`Received a message: ${receivedMessage}`);
-    const publishedMessage = `${constantMessage} ${receivedMessage}`;
+    const calculatorResult = add(1, 1);
+    const publishedMessage = `${constantMessage} ${receivedMessage}, 1 + 1 = ${calculatorResult}`;
     console.log(`Publish to ${publishEvent} event: ${publishedMessage}`);
     nats.publish(publishEvent, publishedMessage);
 });
