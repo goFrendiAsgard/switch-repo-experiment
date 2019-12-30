@@ -12,9 +12,9 @@ multi-repo --> mono-repo --> multi-repo
 
 * Switch-repo let you enlist your external repositories in a json file.
 
-* By performing `switch pull`, Switch-repo will perform `git commit` (if repo exists) then delete all external repositories and re-clone them.
+* By performing `node main.js pull`, Switch-repo will perform `git commit` (if repo exists) then delete all external repositories and re-clone them.
 
-* By performing `switch push`, Switch-repo will perform `git push` to all external repositories.
+* By performing `node main.js push`, Switch-repo will perform `git push` to all external repositories.
 
 * By performing `switch run`, Switch-repo will run all services and containers.
 

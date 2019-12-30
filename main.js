@@ -1,5 +1,6 @@
-const configuration = require("./configuration.js");
-const { spawn } = require('child_process');
+const { spawn } = require("child_process");
+const fs = require("fs-extra");
+const path = require("path");
 
 /**
  * @typedef {Object} Environments
@@ -10,20 +11,20 @@ const { spawn } = require('child_process');
  * @property {string} type - Component type to indicate that this is a `service` should be "service"
  * @property {string} location - Location of the service relative to current directory
  * @property {string} start - Command to run service in local machine
- * @property {Map<string, string>} link - link from library's location to this repo
+ * @property {Map<string, string>} links - link from library's location to this repo
  * @property {string} origin - Origin of the repo
  * @property {string} branch - Repo branch (used for pull/clone)
  * 
  * @typedef {Object} Library
  * @property {string} type - Component type to indicate that this is a `library` should be "library"
  * @property {string} location - Location of the library relative to current directory
- * @property {Map<string, string>} link - link from other library's location to this repo
+ * @property {Map<string, string>} links - link from other library's location to this repo
  * @property {string} origin - Origin of the repo
  * @property {string} branch - Repo branch (used for pull/clone)
  * 
  * @typedef {Object} Container
  * @property {string} type - Component type to indicate that this is a `container` should be "container"
- * @property {string} start - Command to run container in local machine
+ * @property {string} containerName - Container name
  * @property {string} run - Command to run container in local machine (will be executed if `start` is failed)
  * 
  * @typedef {Object} Config
@@ -56,6 +57,29 @@ function runCommand(command, option) {
 }
 
 /**
+ * synchronizeLink
+ * @param {Config} config 
+ */
+async function synchronizeLink(config) {
+    for (let serviceName in config.components) {
+        const currentComponent = config.components[serviceName];
+        if (!currentComponent.links) {
+            continue;
+        }
+        for (let otherServiceName in currentComponent.links) {
+            otherComponent = config.components[otherServiceName];
+            if (!otherComponent) {
+                continue;
+            }
+            const currentLocation = path.join(currentComponent.location, currentComponent.links[otherServiceName]);
+            const otherLocation = otherComponent.location;
+            console.log(`Copy ${otherLocation} to ${currentLocation}`)
+            await fs.copy(otherLocation, currentLocation);
+        }
+    }
+}
+
+/**
  * pull all services and libraries
  * @param {Config} config - configuration
  */
@@ -73,7 +97,6 @@ async function pull(config) {
         if (!component.origin || !component.location) {
             continue;
         }
-        console.log(component.origin == "", component.location == "", component);
         if (component.branch == "") {
             component.branch = "master";
         }
@@ -102,7 +125,7 @@ async function push(config, args) {
         if (["service", "library"].indexOf(component.type) == -1) {
             continue;
         }
-        if (component.origin == "" || component.location == "") {
+        if (!component.origin || !component.location) {
             continue;
         }
         const cwd = component.location;
@@ -121,18 +144,18 @@ async function push(config, args) {
 async function checkout(config, args) {
     const branch = args.length > 0 ? args[1] : "master"
     console.log(`[CHECKOUT MONOREPO to ${branch}]`);
-    await runCommand(`git checkout "${branch}"`);
+    await runCommand(`git checkout -b "${branch}"`);
     for (let componentName in config.components) {
         const component = config.components[componentName];
         if (["service", "library"].indexOf(component.type) == -1) {
             continue;
         }
-        if (component.origin == "" || component.location == "") {
+        if (!component.origin || !component.location) {
             continue;
         }
         const cwd = component.location;
         console.log(`[CHECKOUT ${componentName} to ${branch}]`);
-        await runCommand(`git checkout "${branch}"`);
+        await runCommand(`git checkout -b "${branch}"`);
     }
 }
 
@@ -150,7 +173,7 @@ async function merge(config, args) {
         if (["service", "library"].indexOf(component.type) == -1) {
             continue;
         }
-        if (component.origin == "" || component.location == "") {
+        if (!component.origin || !component.location) {
             continue;
         }
         const cwd = component.location;
@@ -182,12 +205,12 @@ function runComponentCommand(serviceName, command, config) {
     proc.stdout.on("data", (data) => {
         const strData = data.toString("utf8");
         const utcString = new Date().toISOString();
-        process.stdout.write(`[LOG ${utcString} ${serviceName}] ${strData}`);
+        process.stdout.write(`[STDOUT ${utcString} ${serviceName}] ${strData}`);
     });
     proc.stderr.on("data", (data) => {
         const strData = data.toString("utf8");
         const utcString = new Date().toISOString();
-        process.stderr.write(`[ERR ${utcString} ${serviceName}] ${strData}`);
+        process.stderr.write(`[STDERR ${utcString} ${serviceName}] ${strData}`);
     });
     const promise = new Promise((resolve, reject) => {
         try {
@@ -208,8 +231,7 @@ function runComponentCommand(serviceName, command, config) {
  * @param {Config} config - config
  */
 function runServiceComponent(serviceName, component, config) {
-    const command = component.start;
-    return runComponentCommand(serviceName, command, config);
+    return runComponentCommand(serviceName, component.start, config);
 }
 
 /**
@@ -219,8 +241,10 @@ function runServiceComponent(serviceName, component, config) {
  * @param {Config} config - config
  */
 function runContainerComponent(serviceName, component, config) {
-    const command = `${component.start} || ${component.run}`;
-    return runComponentCommand(serviceName, command, config);
+    const { promise: startPromise } = runComponentCommand(serviceName, `docker start ${component.containerName} || ${component.run}`, config);
+    const { promise: logPromise, proc } = runComponentCommand(serviceName, `docker logs ${component.containerName} --follow`, config);
+    const promise = startPromise.then(() => logPromise);
+    return { promise, proc };
 }
 
 /**
@@ -241,7 +265,6 @@ function getComponentRunner(component) {
  */
 async function run(config) {
     const procs = [];
-    const promises = [];
     // add controller (i.e: to terminate all process when ctrl+c is executed)
     const pControl = new Promise((resolve, reject) => {
         process.on("SIGINT", () => {
@@ -257,8 +280,8 @@ async function run(config) {
             return resolve(true);
         });
     });
-    promises.push(pControl);
     // add all service processes
+    let procPromise = new Promise((resolve) => resolve(true));
     for (let serviceName of config.executions) {
         const component = config.components[serviceName];
         if (["service", "container"].indexOf(component.type) == -1) {
@@ -266,11 +289,11 @@ async function run(config) {
         }
         const runner = getComponentRunner(component);
         const { promise, proc } = runner(serviceName, component, config);
-        promises.push(promise);
+        procPromise = procPromise.then(promise);
         procs.push(proc)
     }
     // wait
-    await Promise.all(promises);
+    await Promise.all([pControl, procPromise]);
 }
 
 async function main() {
@@ -279,7 +302,8 @@ async function main() {
     }
     const command = process.argv[2];
     const args = process.argv.slice(3);
-    const config = configuration.config;
+    const config = require('./config.json');
+    await synchronizeLink(config);
     switch (command) {
         case "pull": await pull(config); break;
         case "push": await push(config, args); break;
