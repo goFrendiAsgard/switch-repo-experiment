@@ -73,7 +73,7 @@ async function pull(config) {
         if (component.branch == "") {
             component.branch = "master";
         }
-        console.log(componentName);
+        console.log(`PULL ${componentName}`);
         await runCommand("git add . -A && git commit -m 'Save changes'")
             .then(() => { // commit success
                 // git checkout feature/train-test-from-file
@@ -98,7 +98,7 @@ async function push(config) {
         if (component.origin == "" || component.location == "") {
             continue;
         }
-        console.log(componentName);
+        console.log(`PUSH ${componentName}`);
         await runCommand("git add . -A && git commit -m 'Save changes before push to remote' && git push -u origin HEAD");
     }
 }
