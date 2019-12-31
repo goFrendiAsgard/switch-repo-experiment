@@ -398,6 +398,12 @@ async function main() {
     const args = process.argv.slice(3);
     const config = yaml.safeLoad(fs.readFileSync(configPath, "utf8"));
     switch (command) {
+        case "unfreeze":
+            await unfreeze(config);
+            break;
+        case "freeze":
+            await freeze(config);
+            break;
         case "pull":
             await pull(config);
             break;
