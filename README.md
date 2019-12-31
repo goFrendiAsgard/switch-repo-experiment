@@ -142,7 +142,7 @@ vim ./libraries/calculator/add.js # or code ./libraries/calculator/add.js
 module.exports = (a, b) => a + b;
 ```
 
-## Pull
+## Pull all
 
 Now, eveerything is ready. Time to fetch some codes from multi-repos.
 
@@ -162,9 +162,13 @@ Finally, the most exciting thing for developers: run everything in a single scre
 
 ![Run](./images/akbar-run.PNG)
 
-## Push
+## Develop
 
-You can try to change the code, run it, and push it into every single repositories you've enlisted.
+Since this is a single monorepo, you can perform any git operation here. Once you have make sure that your code works as expected, you can push all changes to every sub-repos.
+
+## Push all
+
+Once the development finished, you can push the changes into every sub-repos at once.
 
 ```sh
 ./akbar push
