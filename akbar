@@ -153,12 +153,12 @@ async function push(config, args) {
         await unfreezeComponentGit(component);
         const cwd = component.location;
         console.log(`[PUSH ${componentName}]`);
-        await runCommand(`git add . -A && git commit -m "${comment}" && git push -u origin ${component.branch}`, { cwd });
+        await runCommand(`git status && git add . -A && git commit -m "${comment}" && git push -u origin ${component.branch}`, { cwd });
         console.log(`[FREEZE ${componentName}]`);
         await freezeComponentGit(component);
     }
     console.log(`[PUSH MONOREPO]`);
-    await runCommand(`git add . -A && git commit -m "${comment}" && git push -u origin HEAD`);
+    await runCommand(`git status && git add . -A && git commit -m "${comment}" && git push -u origin HEAD`);
 }
 
 function formatComponentLog(componentName, prefix, chunk) {
