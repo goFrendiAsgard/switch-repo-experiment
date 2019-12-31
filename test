@@ -7,18 +7,23 @@ rm -Rf ${BASE_DIR}.git/_frozen
 rm -Rf ${BASE_DIR}.git/_temporary
 
 # pull, component not exists
+echo "TEST PULL (EMPTY)"
 ./akbar pull
 
 # pull, component exists, frozen and temporary also exists
+echo "TEST PULL (COMPLETE)"
 ./akbar pull
 
 # pull, component exists, but frozen and temporary is not available
 rm -Rf ${BASE_DIR}.git/_frozen
 rm -Rf ${BASE_DIR}.git/_temporary
+echo "TEST PULL (PARTIAL)"
 ./akbar pull
 
 # push
+echo "TEST PUSH"
 ./akbar push
 
 # run
+echo "TEST RUN"
 ./akbar run
