@@ -96,6 +96,7 @@ async function pull(config) {
             await runCommand(`git init`, { cwd });
             await runCommand(`git remote add origin ${component.origin}`, { cwd });
             console.log(`[PULL ${componentName}]`);
+            await runCommand(`git stash`);
             await runCommand(`git fetch && git checkout ${component.branch} && git pull origin ${component.branch}`, { cwd });
             await runCommand(`git add . -A`, { cwd });
         } else {
