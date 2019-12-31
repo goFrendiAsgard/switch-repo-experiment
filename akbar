@@ -278,7 +278,7 @@ async function adjustGitIgnore(config) {
         }
         subRepoIgnoreList.push(`${component.location}/.git`);
     }
-    const subRepoIgnoreContent = subRepoIgnoreContent.join("\n");
+    const subRepoIgnoreContent = subRepoIgnoreList.join("\n");
     // get .gitignore
     const oldIgnoreContent = await fs.readFile(".gitignore");
     const oldCustomIgnoreContent = oldIgnoreContent.split(separator).slice(1).join(separator);
