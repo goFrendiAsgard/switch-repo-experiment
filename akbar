@@ -65,6 +65,11 @@ async function synchronizeLink(config) {
     }
 }
 
+/**
+ * run shell command
+ * @param {string} command 
+ * @param {Object} option 
+ */
 function runCommand(command, option) {
     try {
         // create `proc` and make `promise` to wait until the `proc` closed.
@@ -95,7 +100,7 @@ function runCommand(command, option) {
 
 /**
  * get frozen git location
- * @param {Component} component 
+ * @param {Library|Service} component 
  */
 function getComponentTemporaryLocation(component) {
     return `.git/_temporary/${component.location}`;
@@ -103,7 +108,7 @@ function getComponentTemporaryLocation(component) {
 
 /**
  * move .git to .git.backup
- * @param {Component} component 
+ * @param {Library|Service} component 
  */
 async function backupComponent(component) {
     await fs.move(`${component.location}/.git`, getComponentTemporaryLocation(component), { overwrite: true });
@@ -111,7 +116,7 @@ async function backupComponent(component) {
 
 /**
  * move .git.backup to .git
- * @param {Component} component 
+ * @param {Library|Service} component 
  */
 async function restoreComponent(component) {
     await fs.move(getComponentTemporaryLocation(component), `${component.location}/.git`, { overwrite: true });
@@ -119,7 +124,7 @@ async function restoreComponent(component) {
 
 /**
  * get frozen git location
- * @param {Component} component 
+ * @param {Library|Service} component 
  */
 function getComponentFrozenGitLocation(component) {
     return `.git/_frozen/${component.location}`;
@@ -127,7 +132,7 @@ function getComponentFrozenGitLocation(component) {
 
 /**
  * move .git to .git.freeze
- * @param {Component} component 
+ * @param {Library|Service} component 
  */
 async function freezeComponent(component) {
     await fs.move(`${component.location}/.git`, getComponentFrozenGitLocation(component), { overwrite: true });
@@ -135,7 +140,7 @@ async function freezeComponent(component) {
 
 /**
  * move .git.freeze to .git
- * @param {Component} component 
+ * @param {Library|Service} component 
  */
 async function unfreezeComponent(component) {
     await fs.move(getComponentFrozenGitLocation(component), `${component.location}/.git`, { overwrite: true });
