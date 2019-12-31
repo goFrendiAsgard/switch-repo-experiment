@@ -105,7 +105,7 @@ function getComponentFrozenGitLocation(component) {
  * @param {Component} component 
  */
 async function freezeComponent(component) {
-    await fs.move(`${component.location}/.git`, getComponentFrozenGitLocation(component));
+    await fs.move(`${component.location}/.git`, getComponentFrozenGitLocation(component), { overwrite: true });
 }
 
 /**
@@ -113,7 +113,7 @@ async function freezeComponent(component) {
  * @param {Component} component 
  */
 async function unfreezeComponent(component) {
-    await fs.move(getComponentFrozenGitLocation(component), `${component.location}/.git`);
+    await fs.move(getComponentFrozenGitLocation(component), `${component.location}/.git`, { overwrite: true });
 }
 
 /**
