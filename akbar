@@ -91,12 +91,16 @@ async function pull(config) {
         }
         if (fs.existsSync(component.location)) {
             const cwd = component.location;
-            await runCommand(`git add . -A && git commit -m "${comment}"`, { cwd });
+            console.log(`[INIT ${componentName}]`);
+            await runCommand(`git init && git add . -A && git commit -m "${comment}"`, { cwd });
+            await runCommand(`git remote add origin ${component.origin}`, { cwd });
             console.log(`[PULL ${componentName}]`);
-            await runCommand(`git fetch && git checkout HEAD && git pull origin HEAD`, { cwd });
+            await runCommand(`git fetch && git checkout HEAD && git pull origin ${component.branch}`, { cwd });
         } else {
-            await runCommand(`git clone ${component.origin} ${component.location} && cd ${component.location} && git checkout ${component.branch}`);
+            console.log(`[CLONE ${componentName}]`);
+            await runCommand(`git clone ${component.origin} ${component.location} --depth=1 && cd ${component.location} && git checkout ${component.branch}`);
         }
+        await fs.remove(`${component.location}/.git`);
     }
 }
 
@@ -118,6 +122,9 @@ async function push(config, args) {
             continue;
         }
         const cwd = component.location;
+        console.log(`[INIT ${componentName}]`);
+        await runCommand(`git init && git add . -A && git commit -m "${comment}"`, { cwd });
+        await runCommand(`git remote add origin ${component.origin}`, { cwd });
         console.log(`[PUSH ${componentName}]`);
         await runCommand(`git add . -A && git commit -m "${comment}" && git push -u origin HEAD`, { cwd });
     }
@@ -263,34 +270,6 @@ async function synchronizeLink(config) {
     }
 }
 
-/**
- * adjustGitIgnore
- * @param {Config} config 
- */
-async function adjustGitIgnore(config) {
-    const separator = "#---Write your ignore list below---"
-    // create new IgnoreList
-    const subRepoIgnoreList = [];
-    for (let serviceName in config.components) {
-        const component = config.components[serviceName];
-        if (["service", "container"].indexOf(component.type) == -1) {
-            continue;
-        }
-        if (!component.origin || !component.location) {
-            continue;
-        }
-        subRepoIgnoreList.push(`${component.location}/.git`);
-    }
-    const subRepoIgnoreContent = subRepoIgnoreList.join("\n");
-    // get .gitignore
-    const oldIgnoreContent = await fs.readFile(".gitignore");
-    const oldIgnoreContentList = oldIgnoreContent.toString("utf8").split(separator);
-    const oldCustomIgnoreContentList = oldIgnoreContentList.length == 1 ? oldIgnoreContentList : oldIgnoreContentList.slice(1);
-    const oldCustomIgnoreContent = oldCustomIgnoreContentList.join(separator).trim();
-    const newIgnoreContent = `${subRepoIgnoreContent}\n${separator}\n${oldCustomIgnoreContent}`;
-    await fs.writeFile(".gitignore", newIgnoreContent);
-}
-
 async function main() {
     if (process.argv.length < 3) {
         console.error("command expected");
@@ -302,16 +281,13 @@ async function main() {
         case "pull":
             await pull(config);
             await synchronizeLink(config);
-            await adjustGitIgnore(config);
             break;
         case "push":
             await synchronizeLink(config);
-            await adjustGitIgnore(config);
             await push(config, args);
             break;
         case "run":
             await synchronizeLink(config);
-            await adjustGitIgnore(config);
             await run(config);
             break;
         default: throw new Error("invalid command");
