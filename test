@@ -2,6 +2,7 @@
 
 BASE_DIR=$(dirname "$0")
 
+# tear down
 rm -Rf ${BASE_DIR}/services
 rm -Rf ${BASE_DIR}.git/_frozen
 rm -Rf ${BASE_DIR}.git/_temporary
@@ -14,15 +15,22 @@ echo "TEST PULL (EMPTY)"
 echo "TEST PULL (COMPLETE)"
 ./akbar pull
 
-# pull, component exists, but frozen and temporary is not available
+# pull, component exists, but frozen is not available
 rm -Rf ${BASE_DIR}.git/_frozen
-rm -Rf ${BASE_DIR}.git/_temporary
 echo "TEST PULL (PARTIAL)"
 ./akbar pull
 
 # push
 echo "TEST PUSH"
 ./akbar push
+
+# unfreeze
+echo "TEST UNFREEZE"
+./akbar unfreeze
+
+# freeze
+echo "TEST FREEZE"
+./akbar freeze
 
 # run
 echo "TEST RUN"

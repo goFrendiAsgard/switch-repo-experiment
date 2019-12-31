@@ -222,6 +222,53 @@ async function push(config, args) {
     await runCommand(`git status && git add . -A && git commit -m "${comment}" && git push -u origin HEAD`);
 }
 
+
+/**
+ * freeze all service and libraries 
+ * @param {Config} config - configuration
+ */
+async function freeze(config) {
+    // syncrhonize link
+    await synchronizeLink(config);
+    for (let componentName in config.components) {
+        const component = config.components[componentName];
+        if (["service", "library"].indexOf(component.type) == -1) {
+            continue;
+        }
+        if (!component.origin || !component.location) {
+            continue;
+        }
+        if (!fs.existsSync(`${component.location}/.git`)) {
+            throw new Error("Component exists, but is not a git repository, please unfreeze or pull");
+        }
+        console.log(`[FREEZE ${componentName} ON ${component.location}]`);
+        await freezeComponent(component);
+    }
+}
+
+/**
+ * unfreeze all service and libraries 
+ * @param {Config} config - configuration
+ */
+async function unfreeze(config) {
+    // syncrhonize link
+    await synchronizeLink(config);
+    for (let componentName in config.components) {
+        const component = config.components[componentName];
+        if (["service", "library"].indexOf(component.type) == -1) {
+            continue;
+        }
+        if (!component.origin || !component.location) {
+            continue;
+        }
+        if (!fs.existsSync(getComponentFrozenGitLocation(component))) {
+            throw new Error("Component exists, but no git info available, please unfreeze");
+        }
+        console.log(`[UNFREEZE ${componentName} ON ${component.location}]`);
+        await unfreezeComponent(component);
+    }
+}
+
 function formatComponentLog(componentName, prefix, chunk) {
     const strData = chunk.toString("utf8").trim();
     const utcString = new Date().toISOString();
