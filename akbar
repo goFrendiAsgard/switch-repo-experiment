@@ -92,7 +92,8 @@ async function pull(config) {
         if (fs.existsSync(component.location)) {
             const cwd = component.location;
             console.log(`[INIT ${componentName}]`);
-            await runCommand(`git init && git add . -A && git commit -m "${comment}"`, { cwd });
+            // await runCommand(`git init && git add . -A && git commit -m "${comment}"`, { cwd });
+            await runCommand(`git init && git add . -A`, { cwd });
             await runCommand(`git remote add origin ${component.origin}`, { cwd });
             console.log(`[PULL ${componentName}]`);
             await runCommand(`git fetch && git checkout HEAD && git pull origin ${component.branch}`, { cwd });
