@@ -69,7 +69,7 @@ function runCommand(command, option) {
 }
 
 function getFrozenGitLocation(component) {
-    return `.git/freeze/${component.name}`;
+    return `.git/frozen/${component.location}`;
 }
 
 /**
