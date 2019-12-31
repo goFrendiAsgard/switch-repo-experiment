@@ -69,6 +69,22 @@ function runCommand(command, option) {
 }
 
 /**
+ * move .git to .git.freeze
+ * @param {Component} component 
+ */
+async function freezeComponentGit(component) {
+    await fs.move(`${component.location}/.git`, `${component.location}/.git.freeze`);
+}
+
+/**
+ * move .git.freeze to .git
+ * @param {Component} component 
+ */
+async function unfreezeComponentGit(component) {
+    await fs.move(`${component.location}/.git.freeze`, `${component.location}/.git`);
+}
+
+/**
  * pull all services and libraries
  * @param {Config} config - configuration
  */
@@ -90,20 +106,20 @@ async function pull(config) {
             component.branch = "master";
         }
         if (fs.existsSync(component.location)) {
+            if (!fs.existsSync(`${component.location}/.git.freeze`)) {
+                throw new Error("Component exists, but doesn't have .git.freeze");
+            }
+            await unfreezeComponentGit(component);
             const cwd = component.location;
-            console.log(`[INIT ${componentName}]`);
-            // await runCommand(`git init && git add . -A && git commit -m "${comment}"`, { cwd });
-            await runCommand(`git init`, { cwd });
-            await runCommand(`git remote add origin ${component.origin}`, { cwd });
             console.log(`[PULL ${componentName}]`);
-            await runCommand(`git add . -A && git stash`);
+            await runCommand(`git add . -A && git stash`, { cwd });
             await runCommand(`git fetch && git checkout ${component.branch} && git pull origin ${component.branch}`, { cwd });
             await runCommand(`git stash pop`, { cwd });
         } else {
             console.log(`[CLONE ${componentName}]`);
-            await runCommand(`git clone ${component.origin} ${component.location} --depth=1 && cd ${component.location} && git checkout ${component.branch}`);
+            await runCommand(`git clone ${component.origin} ${component.location} && cd ${component.location} && git checkout ${component.branch}`);
         }
-        await fs.remove(`${component.location}/.git`);
+        await freezeComponentGit(component);
     }
 }
 
