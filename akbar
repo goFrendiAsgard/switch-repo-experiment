@@ -281,7 +281,9 @@ async function adjustGitIgnore(config) {
     const subRepoIgnoreContent = subRepoIgnoreList.join("\n");
     // get .gitignore
     const oldIgnoreContent = await fs.readFile(".gitignore");
-    const oldCustomIgnoreContent = oldIgnoreContent.toString("utf8").split(separator).slice(1).join(separator);
+    const oldIgnoreContentList = oldIgnoreContent.toString("utf8").split(separator);
+    const oldCustomIgnoreContentList = oldIgnoreContentList.length == 1 ? oldIgnoreContentList : oldIgnoreContentList.slice(1);
+    const oldCustomIgnoreContent = oldCustomIgnoreContentList.join(separator);
     const newIgnoreContent = `${subRepoIgnoreContent}\n${separator}\n${oldCustomIgnoreContent}`;
     await fs.writeFile(".gitignore", newIgnoreContent);
 }
@@ -314,8 +316,8 @@ async function main() {
     return true;
 }
 
-main().then((val) => {
-    console.log("Done", val);
+main().then(() => {
+    console.log("Done");
 }).catch((error) => {
     console.error(error);
 });
