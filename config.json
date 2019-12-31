@@ -17,20 +17,20 @@
     "components": {
         "calculator": {
             "type": "library",
-            "location": "./libraries/calculator"
+            "location": "libraries/calculator"
         },
         "gateway": {
             "type": "service",
             "origin": "git@github.com:goFrendiAsgard/switch-repo-gateway.git",
             "branch": "master",
-            "location": "./services/gateway",
+            "location": "services/gateway",
             "start": "npm install && node start"
         },
         "service": {
             "type": "service",
             "origin": "git@github.com:goFrendiAsgard/switch-repo-service.git",
             "branch": "master",
-            "location": "./services/service",
+            "location": "services/service",
             "links": {
                 "calculator": {
                     "from": "./add.js",
