@@ -68,12 +68,16 @@ function runCommand(command, option) {
     }
 }
 
+function getFrozenGitLocation(component) {
+    return `.git/freeze/${component.name}`;
+}
+
 /**
  * move .git to .git.freeze
  * @param {Component} component 
  */
 async function freezeComponentGit(component) {
-    await fs.move(`${component.location}/.git`, `${component.location}/.git.freeze`);
+    await fs.move(`${component.location}/.git`, getFrozenGitLocation(component));
 }
 
 /**
@@ -81,7 +85,7 @@ async function freezeComponentGit(component) {
  * @param {Component} component 
  */
 async function unfreezeComponentGit(component) {
-    await fs.move(`${component.location}/.git.freeze`, `${component.location}/.git`);
+    await fs.move(getFrozenGitLocation(component), `${component.location}/.git`);
 }
 
 /**
@@ -106,7 +110,7 @@ async function pull(config) {
             component.branch = "master";
         }
         if (fs.existsSync(component.location)) {
-            if (!fs.existsSync(`${component.location}/.git.freeze`)) {
+            if (!fs.existsSync(getFrozenGitLocation(component))) {
                 throw new Error("Component exists, but doesn't have .git.freeze");
             }
             console.log(`[UNFREEZE ${componentName}]`);
@@ -146,7 +150,7 @@ async function push(config, args) {
         if (!component.origin || !component.location) {
             continue;
         }
-        if (!fs.existsSync(`${component.location}/.git.freeze`)) {
+        if (!fs.existsSync(getFrozenGitLocation(component))) {
             throw new Error("Component exists, but doesn't have .git.freeze");
         }
         console.log(`[UNFREEZE ${componentName}]`);
