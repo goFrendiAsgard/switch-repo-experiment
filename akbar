@@ -161,6 +161,14 @@ async function push(config, args) {
     await runCommand(`git add . -A && git commit -m "${comment}" && git push -u origin HEAD`);
 }
 
+function formatComponentLog(componentName, prefix, chunk) {
+    const strData = chunk.toString("utf8").trim();
+    const utcString = new Date().toISOString();
+    return strData.split("\n").map((line) => {
+        return `[${prefix} ${utcString} ${componentName}] ${line}`;
+    }).join("\n");
+}
+
 /**
  * run command of a component
  * @param {string} serviceName - Name of the service (i.e: how the command is aliased)
@@ -181,15 +189,11 @@ function runComponentCommand(serviceName, command, config) {
     }
     // create `proc` and make `promise` to wait until the `proc` closed.
     const proc = spawn("/bin/bash", ["-c", command], { cwd, env });
-    proc.stdout.on("data", (data) => {
-        const strData = data.toString("utf8").trim();
-        const utcString = new Date().toISOString();
-        console.log(`[STDOUT ${utcString} ${serviceName}] ${strData}`);
+    proc.stdout.on("data", (chunk) => {
+        console.log(formatComponentLog(serviceName, "STDOUT", chunk));
     });
-    proc.stderr.on("data", (data) => {
-        const strData = data.toString("utf8").trim();
-        const utcString = new Date().toISOString();
-        console.error(`[STDERR ${utcString} ${serviceName}] ${strData}`);
+    proc.stderr.on("data", (chunk) => {
+        console.error(formatComponentLog(serviceName, "STDERR", chunk));
     });
     const promise = new Promise((resolve, reject) => {
         try {
