@@ -60,74 +60,77 @@ vim ./config.json # or code ./config.json
 
 At the beginning, the configuration might looks like this:
 
-```json
-{
-    "environments": {
-        "general": {},
-        "services": {}
-    },
-    "components": {},
-    "executions": []
-}
+```yaml
+environments:
+  general: {}
+  services: {}
+
+components: {}
+
+executions: []
 ```
 
 Now, edit your configuration to match this:
 
-```javascript
-// WARNING: Please remove every comment in this file. JSON doesn't support comments.
-{
-    "environments": { // Environment shared for every services
-        "general": { // General environment, shared among services
-            "natsUrl": "nats://nats.io:4222",
-            "getMessageEvent": "foo",
-            "sendMessageEvent": "bar"
-        },
-        "services": {
-            "gateway": { // Specific environment for `gateway` service.
-                "port": 3000
-            },
-            "service": { // Specific environment for `service` service.
-                "message": "noob"
-            }
-        }
-    },
-    "components": { // Components of this "monorepo" project
-        "calculator": { // A library, we wil add this later. Can be shared among services via `service.links`
-            "type": "library",
-            "location": "./libraries/calculator" // physical location, relative to the project
-        },
-        "gateway": { // A gateway service (will be fetched from your repo). This service will listen to HTTP request, send message to NATS, waiting for reply, and show serve response.
-            "type": "service",
-            "origin": "git@github.com:goFrendiAsgard/switch-repo-gateway.git", // Make sure you change this one to match yours
-            "branch": "master",
-            "location": "./services/gateway", // physical location, relative to the project
-            "start": "npm install && node start"
-        },
-        "service": { // Core service, This service will listen to NATS and publish response.
-            "type": "service",
-            "origin": "git@github.com:goFrendiAsgard/switch-repo-service.git", // Make sure you change this one to match yours
-            "branch": "master",
-            "location": "./services/service", // physical location, relative to the project
-            "links": {
-                "calculator": { // this service is depend on calculator library
-                    "from": "./add.js",
-                    "to": "./add.js"
-                }
-            },
-            "start": "npm install && node start"
-        },
-        "nats": { // Nats docker container definition
-            "type": "container",
-            "run": "docker run --name nats -p 4222:4222 -p 6222:6222 -p 8222:8222 -d nats",
-            "containerName": "nats"
-        }
-    },
-    "executions": [ // The running order of the services
-        "nats",
-        "service",
-        "gateway"
-    ]
-}
+```yaml
+environments:
+  general:
+    # The following environments will be applied to every service on runtime:
+    natsUrl: nats://nats.io:4222
+    getMessageEvent: foo
+    sendMessageEvent: bar
+
+  services:
+    gateway:
+      # gateway specific environment
+      port: 3000
+    service:
+      # service specific environment
+      message: noob
+
+
+components:
+
+  # a library
+  calculator:
+    type: library
+    location: "./libraries/calculator"
+
+  # gateway service
+  gateway:
+    type: service
+    # TODO: adjust the origin to match yours
+    origin: git@github.com:goFrendiAsgard/switch-repo-gateway.git
+    branch: master
+    location: "./services/gateway"
+    start: npm install && node start
+
+  # our core service, unfortunately the name is also "service" :(
+  service:
+    type: service
+    # TODO: adjust the origin to match yours
+    origin: git@github.com:goFrendiAsgard/switch-repo-service.git
+    branch: master
+    location: "./services/service"
+    links:
+      # this service is depend on calculator library.
+      calculator:
+        from: "./add.js"
+        to: "./add.js"
+    start: npm install && node start
+
+  # docker container for nats
+  nats:
+    type: container
+    run: docker run --name nats -p 4222:4222 -p 6222:6222 -p 8222:8222 -d nats
+    containerName: nats
+
+
+executions:
+  # execution order
+  - nats
+  - service
+  - gateway
 ```
 
 ## Create library

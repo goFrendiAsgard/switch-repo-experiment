@@ -1,0 +1,56 @@
+environments:
+  general:
+    # The following environments will be applied to every service on runtime:
+    natsUrl: nats://nats.io:4222
+    getMessageEvent: foo
+    sendMessageEvent: bar
+
+  services:
+    gateway:
+      # gateway specific environment
+      port: 3000
+    service:
+      # service specific environment
+      message: noob
+
+
+components:
+
+  # a library
+  calculator:
+    type: library
+    location: "./libraries/calculator"
+
+  # gateway service
+  gateway:
+    type: service
+    origin: git@github.com:goFrendiAsgard/switch-repo-gateway.git
+    branch: master
+    location: "./services/gateway"
+    start: npm install && node start
+
+  # our core service, unfortunately the name is also "service" :(
+  service:
+    type: service
+    origin: git@github.com:goFrendiAsgard/switch-repo-service.git
+    branch: master
+    location: "./services/service"
+    links:
+      # this service is depend on calculator library.
+      calculator:
+        from: "./add.js"
+        to: "./add.js"
+    start: npm install && node start
+
+  # docker container for nats
+  nats:
+    type: container
+    run: docker run --name nats -p 4222:4222 -p 6222:6222 -p 8222:8222 -d nats
+    containerName: nats
+
+
+executions:
+  # execution order
+  - nats
+  - service
+  - gateway

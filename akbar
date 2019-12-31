@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 const { spawn } = require("child_process");
-const fs = require("fs-extra");
 const path = require("path");
+const fs = require("fs-extra");
+const yaml = require('js-yaml');
 
-const configPath = process.env["CONFIG_PATH"] || "./config.json";
+const configPath = process.env["CONFIG_PATH"] || "./config.yaml";
 
 /**
  * @typedef {Object} Environments
@@ -39,6 +40,30 @@ const configPath = process.env["CONFIG_PATH"] || "./config.json";
  * @property {Map<string, Service | Library | Container>} components - Components.
  * @property {string[]} executions - Components execution order.
  */
+
+/**
+ * synchronizeLink
+ * @param {Config} config 
+ */
+async function synchronizeLink(config) {
+    for (let serviceName in config.components) {
+        const currentComponent = config.components[serviceName];
+        if (!currentComponent.links) {
+            continue;
+        }
+        for (let otherServiceName in currentComponent.links) {
+            const link = currentComponent.links[otherServiceName];
+            otherComponent = config.components[otherServiceName];
+            if (!otherComponent) {
+                continue;
+            }
+            const currentLocation = path.join(currentComponent.location, link.to);
+            const otherLocation = path.join(otherComponent.location, link.from);
+            console.log(`Copy ${otherLocation} to ${currentLocation}`)
+            await fs.copy(otherLocation, currentLocation);
+        }
+    }
+}
 
 function runCommand(command, option) {
     try {
@@ -171,6 +196,8 @@ async function pull(config) {
         console.log(`[FREEZE ${componentName}]`);
         await freezeComponent(component);
     }
+    // syncrhonize link
+    await synchronizeLink(config);
 }
 
 /**
@@ -179,6 +206,9 @@ async function pull(config) {
  * @param {string[]} args - arguments
  */
 async function push(config, args) {
+    // syncrhonize link
+    await synchronizeLink(config);
+    // build comment
     const utcString = new Date().toISOString();
     const rawComment = args.length > 0 ? args[0] : "Save changes before push to remote"
     const comment = `${utcString} ${rawComment}`;
@@ -291,6 +321,9 @@ function getComponentRunner(component) {
  * @param {Config} config - configuration
  */
 async function run(config) {
+    // syncrhonize link
+    await synchronizeLink(config);
+    // declare procs
     const procs = [];
     // add controller (i.e: to terminate all process when ctrl+c is executed)
     const pControl = new Promise((resolve, reject) => {
@@ -323,48 +356,21 @@ async function run(config) {
     await Promise.all([pControl, procPromise]);
 }
 
-/**
- * synchronizeLink
- * @param {Config} config 
- */
-async function synchronizeLink(config) {
-    for (let serviceName in config.components) {
-        const currentComponent = config.components[serviceName];
-        if (!currentComponent.links) {
-            continue;
-        }
-        for (let otherServiceName in currentComponent.links) {
-            const link = currentComponent.links[otherServiceName];
-            otherComponent = config.components[otherServiceName];
-            if (!otherComponent) {
-                continue;
-            }
-            const currentLocation = path.join(currentComponent.location, link.to);
-            const otherLocation = path.join(otherComponent.location, link.from);
-            console.log(`Copy ${otherLocation} to ${currentLocation}`)
-            await fs.copy(otherLocation, currentLocation);
-        }
-    }
-}
-
 async function main() {
     if (process.argv.length < 3) {
         console.error("command expected");
     }
     const command = process.argv[2];
     const args = process.argv.slice(3);
-    const config = require(configPath);
+    const config = yaml.safeLoad(fs.readFileSync(configPath, "utf8"));
     switch (command) {
         case "pull":
             await pull(config);
-            await synchronizeLink(config);
             break;
         case "push":
-            await synchronizeLink(config);
             await push(config, args);
             break;
         case "run":
-            await synchronizeLink(config);
             await run(config);
             break;
         default: throw new Error("invalid command");
