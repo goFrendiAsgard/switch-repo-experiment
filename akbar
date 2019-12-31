@@ -281,7 +281,7 @@ async function adjustGitIgnore(config) {
     const subRepoIgnoreContent = subRepoIgnoreList.join("\n");
     // get .gitignore
     const oldIgnoreContent = await fs.readFile(".gitignore");
-    const oldCustomIgnoreContent = oldIgnoreContent.split(separator).slice(1).join(separator);
+    const oldCustomIgnoreContent = string(oldIgnoreContent).split(separator).slice(1).join(separator);
     const newIgnoreContent = `${subRepoIgnoreContent}\n${separator}\n${oldCustomIgnoreContent}`;
     await fs.writeFile(".gitignore", newIgnoreContent);
 }
