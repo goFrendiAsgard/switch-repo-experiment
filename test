@@ -3,7 +3,10 @@
 BASE_DIR=$(dirname "$0")
 
 rm -Rf ${BASE_DIR}/services
+rm -Rf ${BASE_DIR}.git/frozen
+rm -Rf ${BASE_DIR}.git/temporary
 
+./akbar pull
 ./akbar pull
 ./akbar push
 ./akbar run

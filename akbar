@@ -68,7 +68,35 @@ function runCommand(command, option) {
     }
 }
 
-function getFrozenGitLocation(component) {
+/**
+ * get frozen git location
+ * @param {Component} component 
+ */
+function getComponentTemporaryLocation(component) {
+    return `.git/frozen/${component.location}`;
+}
+
+/**
+ * move .git to .git.backup
+ * @param {Component} component 
+ */
+async function backupComponent(component) {
+    await fs.move(`${component.location}/.git`, getComponentTemporaryLocation(component), { overwrite: true });
+}
+
+/**
+ * move .git.backup to .git
+ * @param {Component} component 
+ */
+async function restoreComponent(component) {
+    await fs.move(getComponentTemporaryLocation(component), `${component.location}/.git`, { overwrite: true });
+}
+
+/**
+ * get frozen git location
+ * @param {Component} component 
+ */
+function getComponentFrozenGitLocation(component) {
     return `.git/frozen/${component.location}`;
 }
 
@@ -76,16 +104,16 @@ function getFrozenGitLocation(component) {
  * move .git to .git.freeze
  * @param {Component} component 
  */
-async function freezeComponentGit(component) {
-    await fs.move(`${component.location}/.git`, getFrozenGitLocation(component));
+async function freezeComponent(component) {
+    await fs.move(`${component.location}/.git`, getComponentFrozenGitLocation(component));
 }
 
 /**
  * move .git.freeze to .git
  * @param {Component} component 
  */
-async function unfreezeComponentGit(component) {
-    await fs.move(getFrozenGitLocation(component), `${component.location}/.git`);
+async function unfreezeComponent(component) {
+    await fs.move(getComponentFrozenGitLocation(component), `${component.location}/.git`);
 }
 
 /**
@@ -110,11 +138,11 @@ async function pull(config) {
             component.branch = "master";
         }
         if (fs.existsSync(component.location)) {
-            if (!fs.existsSync(getFrozenGitLocation(component))) {
+            if (!fs.existsSync(getComponentFrozenGitLocation(component))) {
                 throw new Error("Component exists, but doesn't have .git.freeze");
             }
             console.log(`[UNFREEZE ${componentName}]`);
-            await unfreezeComponentGit(component);
+            await unfreezeComponent(component);
             const cwd = component.location;
             console.log(`[STASH ${componentName}]`);
             await runCommand(`git add . -A && git stash`, { cwd });
@@ -123,12 +151,12 @@ async function pull(config) {
             console.log(`[STASH POP ${componentName}]`);
             await runCommand(`git stash pop`, { cwd });
             console.log(`[FREEZE ${componentName}]`);
-            await freezeComponentGit(component);
+            await freezeComponent(component);
         } else {
             console.log(`[CLONE ${componentName}]`);
             await runCommand(`git clone ${component.origin} ${component.location} && cd ${component.location} && git checkout ${component.branch}`);
             console.log(`[FREEZE ${componentName}]`);
-            await freezeComponentGit(component);
+            await freezeComponent(component);
         }
     }
 }
@@ -150,16 +178,16 @@ async function push(config, args) {
         if (!component.origin || !component.location) {
             continue;
         }
-        if (!fs.existsSync(getFrozenGitLocation(component))) {
-            throw new Error("Component exists, but doesn't have .git.freeze");
+        if (!fs.existsSync(getComponentFrozenGitLocation(component))) {
+            throw new Error("Component exists, but no git info available, please perform pull");
         }
         console.log(`[UNFREEZE ${componentName}]`);
-        await unfreezeComponentGit(component);
+        await unfreezeComponent(component);
         const cwd = component.location;
         console.log(`[PUSH ${componentName}]`);
         await runCommand(`git status && git add . -A && git commit -m "${comment}" && git push -u origin ${component.branch}`, { cwd });
         console.log(`[FREEZE ${componentName}]`);
-        await freezeComponentGit(component);
+        await freezeComponent(component);
     }
     console.log(`[PUSH MONOREPO]`);
     await runCommand(`git status && git add . -A && git commit -m "${comment}" && git push -u origin HEAD`);
