@@ -73,7 +73,7 @@ function runCommand(command, option) {
  * @param {Component} component 
  */
 function getComponentTemporaryLocation(component) {
-    return `.git/frozen/${component.location}`;
+    return `.git/_temporary/${component.location}`;
 }
 
 /**
@@ -97,7 +97,7 @@ async function restoreComponent(component) {
  * @param {Component} component 
  */
 function getComponentFrozenGitLocation(component) {
-    return `.git/frozen/${component.location}`;
+    return `.git/_frozen/${component.location}`;
 }
 
 /**
