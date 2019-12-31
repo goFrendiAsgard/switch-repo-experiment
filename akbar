@@ -164,35 +164,25 @@ async function pull(config) {
         if (fs.existsSync(component.location)) {
             const cwd = component.location;
             if (!fs.existsSync(getComponentFrozenGitLocation(component))) {
-                console.log(`[BACKUP ${componentName}]`);
-                backupComponent(component);
-                console.log(`[CLONE ${componentName}]`);
+                console.log(`[RE-CLONE AND SYNCHRONIZE ${componentName} INTO ${component.location}]`);
+                await backupComponent(component);
                 await runCommand(`git clone ${component.origin} ${component.location} && cd ${component.location} && git checkout ${component.branch}`);
-                console.log(`[STASH ${componentName}]`);
                 await runCommand(`git add . -A && git stash`, { cwd });
-                console.log(`[RESTORE ${componentName}]`);
-                restoreComponent(component);
-                console.log(`[STASH POP ${componentName}]`);
+                await restoreComponent(component);
                 await runCommand(`git stash pop`, { cwd });
-                console.log(`[FREEZE ${componentName}]`);
                 await freezeComponent(component);
                 continue;
             }
-            console.log(`[UNFREEZE ${componentName}]`);
+            console.log(`[PULL ${componentName} INTO ${component.location}]`);
             await unfreezeComponent(component);
-            console.log(`[STASH ${componentName}]`);
             await runCommand(`git add . -A && git stash`, { cwd });
-            console.log(`[PULL ${componentName}]`);
             await runCommand(`git fetch && git checkout ${component.branch} && git pull origin ${component.branch}`, { cwd });
-            console.log(`[STASH POP ${componentName}]`);
             await runCommand(`git stash pop`, { cwd });
-            console.log(`[FREEZE ${componentName}]`);
             await freezeComponent(component);
             continue;
         }
-        console.log(`[CLONE ${componentName}]`);
+        console.log(`[CLONE ${componentName} INTO ${component.location}]`);
         await runCommand(`git clone ${component.origin} ${component.location} && cd ${component.location} && git checkout ${component.branch}`);
-        console.log(`[FREEZE ${componentName}]`);
         await freezeComponent(component);
     }
     // syncrhonize link
@@ -222,12 +212,10 @@ async function push(config, args) {
         if (!fs.existsSync(getComponentFrozenGitLocation(component))) {
             throw new Error("Component exists, but no git info available, please perform pull");
         }
-        console.log(`[UNFREEZE ${componentName}]`);
-        await unfreezeComponent(component);
         const cwd = component.location;
-        console.log(`[PUSH ${componentName}]`);
+        console.log(`[COMMIT AND PUSH ${componentName} FROM ${component.location}]`);
+        await unfreezeComponent(component);
         await runCommand(`git status && git add . -A && git commit -m "${comment}" && git push -u origin ${component.branch}`, { cwd });
-        console.log(`[FREEZE ${componentName}]`);
         await freezeComponent(component);
     }
     console.log(`[PUSH MONOREPO]`);
