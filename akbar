@@ -146,11 +146,10 @@ async function unfreezeComponent(component) {
  * @param {Config} config - configuration
  */
 async function pull(config) {
-    const utcString = new Date().toISOString();
-    const comment = `${utcString} Save Changes`;
     console.log(`[PULL MONOREPO]`);
-    await runCommand(`git add . -A && git commit -m "${comment}"`);
+    await runCommand(`git add . -A && git stash`);
     await runCommand(`git fetch && git checkout HEAD && git pull origin HEAD`);
+    await runCommand(`git stash pop`);
     for (let componentName in config.components) {
         const component = config.components[componentName];
         if (["service", "library"].indexOf(component.type) == -1) {
