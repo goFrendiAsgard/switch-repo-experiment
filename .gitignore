@@ -1,5 +1,4 @@
-services/gateway/.git
-services/service/.git
-undefined/.git
+services/gateway/.git/
+services/service/.git/
 #---Write your ignore list below---
 node_modules

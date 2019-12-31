@@ -276,14 +276,17 @@ async function adjustGitIgnore(config) {
         if (["service", "container"].indexOf(component.type) == -1) {
             continue;
         }
-        subRepoIgnoreList.push(`${component.location}/.git`);
+        if (!component.origin || !component.location) {
+            continue;
+        }
+        subRepoIgnoreList.push(`${component.location}/.git/`);
     }
     const subRepoIgnoreContent = subRepoIgnoreList.join("\n");
     // get .gitignore
     const oldIgnoreContent = await fs.readFile(".gitignore");
     const oldIgnoreContentList = oldIgnoreContent.toString("utf8").split(separator);
     const oldCustomIgnoreContentList = oldIgnoreContentList.length == 1 ? oldIgnoreContentList : oldIgnoreContentList.slice(1);
-    const oldCustomIgnoreContent = oldCustomIgnoreContentList.join(separator);
+    const oldCustomIgnoreContent = oldCustomIgnoreContentList.join(separator).trim();
     const newIgnoreContent = `${subRepoIgnoreContent}\n${separator}\n${oldCustomIgnoreContent}`;
     await fs.writeFile(".gitignore", newIgnoreContent);
 }
