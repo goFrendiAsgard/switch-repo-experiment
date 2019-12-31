@@ -190,10 +190,10 @@ function runComponentCommand(serviceName, command, config) {
     // create `proc` and make `promise` to wait until the `proc` closed.
     const proc = spawn("/bin/bash", ["-c", command], { cwd, env });
     proc.stdout.on("data", (chunk) => {
-        console.log(formatComponentLog(serviceName, "STDOUT", chunk));
+        console.log(formatComponentLog(serviceName, "OUT", chunk));
     });
     proc.stderr.on("data", (chunk) => {
-        console.error(formatComponentLog(serviceName, "STDERR", chunk));
+        console.error(formatComponentLog(serviceName, "ERR", chunk));
     });
     const promise = new Promise((resolve, reject) => {
         try {
