@@ -3,15 +3,13 @@
 Embrace monorepo without abandon multi-repo
 
 ```
-multi-repo --> mono-repo --> multi-repo
-(pull)         (coding)      (push back)
+multi-repos --> mono-repo --> multi-repos
+(pull)          (coding)      (push back)
 ```
 
 # Problem
 
-You already have several repos. You know merging them into mono-repo could give you some advantages, however some of your repos are private, and some others are open-source. You cannot just mix them up into a single mono-repo.
-
-You believe monorepo is easier to manage. You want to do code-review in a single PR, not multiple of them. But you are afraid to fully embrace mono-repo.
+You already have multi repos. You know that switching to mono-repo could give you some advantages. You believe monorepo is easier to manage. You want to do code-review in a single PR, not multiple of them. But you are afraid to fully embrace mono-repo since some of your repos are private. Thus, you don't want to publish everything into a single mono-repo.
 
 __TL;DR__ : You want monorepo, you don't want to abandon multi-repo, and you have a very good reason for that.
 
@@ -30,6 +28,7 @@ git clone git@github.com:goFrendiAsgard/switch-repo-experiment.git ~/akbar
 cd ~/akbar
 ./create ~/myProject
 
+# change directory to the newly created project
 cd ~/myProject
 ```
 
@@ -37,7 +36,7 @@ cd ~/myProject
 
 ## Add origin
 
-After creating an empty project in your computer, you should make a remote repository on your git server and link it to your project:
+After creating an empty project in your computer, you should make a remote repository on your git server and link it to your newly created project:
 
 ```sh
 git remote add origin git@github.com:<your-user>/<your-repo>.git
@@ -58,7 +57,7 @@ https://github.com/goFrendiAsgard/switch-repo-gateway
 vim ./config.json # or code ./config.json
 ```
 
-At the beginning, the configuration might looks like this:
+Right now, the configuration might looks like this:
 
 ```yaml
 environments:
@@ -133,7 +132,11 @@ executions:
   - gateway
 ```
 
+Please make sure you've edit your service's origins (See the TODO comments of the configuration).
+
 ## Create library
+
+Library is reusable component that can be shared among services. Let's make one.
 
 ```sh
 mkdir -p ./libraries/calculator
@@ -145,9 +148,9 @@ vim ./libraries/calculator/add.js # or code ./libraries/calculator/add.js
 module.exports = (a, b) => a + b;
 ```
 
-## Pull all
+## Pull the multi-repos
 
-Now, eveerything is ready. Time to fetch some codes from multi-repos.
+Now, eveerything is ready. Time to fetch some codes from your multi-repos:
 
 ```sh
 ./akbar pull
@@ -155,9 +158,9 @@ Now, eveerything is ready. Time to fetch some codes from multi-repos.
 
 ![Pull](./images/akbar-pull.PNG)
 
-##  Run
+##  Run all services as one
 
-Finally, the most exciting thing for developers: run everything in a single screen. Running micro-services in your machine is now this easy.
+Finally, you can run your services with a single command:
 
 ```sh
 ./akbar run
@@ -165,16 +168,20 @@ Finally, the most exciting thing for developers: run everything in a single scre
 
 ![Run](./images/akbar-run.PNG)
 
-## Develop
+## Develop as single monorepo
 
-Since this is a single monorepo, you can perform any git operation here. Once you have make sure that your code works as expected, you can push all changes to every sub-repos.
+Since your project is now a single monorepo, you can perform any valid git operation here. For example, you can make a new branch, do some commit, and submit pull request.
 
-## Push all
+## Push to multi-repos
 
-Once the development finished, you can push the changes into every sub-repos at once.
+Once ready, you can push every changes you have made into multi-repos:
 
 ```sh
 ./akbar push
 ```
 
 ![Push](./images/akbar-push.PNG)
+
+# Switching from mono-repo to multi-repos and back
+
+At any point, you can perform `./akbar unfreeze` to switch from monorepo to multirepo or `./akbar freeze` to do the opossite.
