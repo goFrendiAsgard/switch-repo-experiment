@@ -184,4 +184,4 @@ Once ready, you can push every changes you have made into multi-repos:
 
 # Switching from mono-repo to multi-repos and back
 
-At any point, you can perform `./akbar unfreeze` to switch from monorepo to multirepo or `./akbar freeze` to do the opossite.
+At any point, you can perform `./akbar split` to switch from mono-repo to multi-repo or `./akbar join` to do the opossite.

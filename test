@@ -24,13 +24,13 @@ echo "TEST PULL (PARTIAL)"
 echo "TEST PUSH"
 ./akbar push
 
-# unfreeze
-echo "TEST UNFREEZE"
-./akbar unfreeze
+# split
+echo "TEST SPLIT"
+./akbar split
 
-# freeze
-echo "TEST FREEZE"
-./akbar freeze
+# join
+echo "TEST JOIN"
+./akbar join
 
 # run
 echo "TEST RUN"

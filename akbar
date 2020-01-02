@@ -107,7 +107,7 @@ function getComponentTemporaryLocation(component) {
 }
 
 /**
- * move .git to .git.backup
+ * backup component
  * @param {Library|Service} component 
  */
 async function backupComponent(component) {
@@ -115,7 +115,7 @@ async function backupComponent(component) {
 }
 
 /**
- * move .git.backup to .git
+ * restore component
  * @param {Library|Service} component 
  */
 async function restoreComponent(component) {
@@ -131,18 +131,18 @@ function getComponentFrozenGitLocation(component) {
 }
 
 /**
- * move .git to .git.freeze
+ * join multi-repo's .git folder into frozen git location
  * @param {Library|Service} component 
  */
-async function freezeComponent(component) {
+async function joinComponent(component) {
     await fs.move(`${component.location}/.git`, getComponentFrozenGitLocation(component), { overwrite: true });
 }
 
 /**
- * move .git.freeze to .git
+ * restore multi-repo's .git folder from frozen git location
  * @param {Library|Service} component 
  */
-async function unfreezeComponent(component) {
+async function splitComponent(component) {
     await fs.move(getComponentFrozenGitLocation(component), `${component.location}/.git`, { overwrite: true });
 }
 
@@ -175,20 +175,20 @@ async function pull(config) {
                 await runCommand(`git add . -A && git stash`, { cwd });
                 await restoreComponent(component);
                 await runCommand(`git stash pop`, { cwd });
-                await freezeComponent(component);
+                await joinComponent(component);
                 continue;
             }
             console.log(`[PULL ${componentName} INTO ${component.location}]`);
-            await unfreezeComponent(component);
+            await splitComponent(component);
             await runCommand(`git add . -A && git stash`, { cwd });
             await runCommand(`git fetch && git checkout ${component.branch} && git pull origin ${component.branch}`, { cwd });
             await runCommand(`git stash pop`, { cwd });
-            await freezeComponent(component);
+            await joinComponent(component);
             continue;
         }
         console.log(`[CLONE ${componentName} INTO ${component.location}]`);
         await runCommand(`git clone ${component.origin} ${component.location} && cd ${component.location} && git checkout ${component.branch}`);
-        await freezeComponent(component);
+        await joinComponent(component);
     }
     // syncrhonize link
     await synchronizeLink(config);
@@ -219,9 +219,9 @@ async function push(config, args) {
         }
         const cwd = component.location;
         console.log(`[COMMIT AND PUSH ${componentName} FROM ${component.location}]`);
-        await unfreezeComponent(component);
+        await splitComponent(component);
         await runCommand(`git status && git add . -A && git commit -m "${comment}" && git push -u origin ${component.branch}`, { cwd });
-        await freezeComponent(component);
+        await joinComponent(component);
     }
     console.log(`[PUSH MONOREPO]`);
     await runCommand(`git status && git add . -A && git commit -m "${comment}" && git push -u origin HEAD`);
@@ -229,10 +229,10 @@ async function push(config, args) {
 
 
 /**
- * freeze all service and libraries 
+ * join multi-repos into mono-repo
  * @param {Config} config - configuration
  */
-async function freeze(config) {
+async function join(config) {
     // syncrhonize link
     await synchronizeLink(config);
     for (let componentName in config.components) {
@@ -244,18 +244,18 @@ async function freeze(config) {
             continue;
         }
         if (!fs.existsSync(`${component.location}/.git`)) {
-            throw new Error("Component exists, but is not a git repository, please unfreeze or pull");
+            throw new Error("Component exists, but is not a git repository, please split or pull");
         }
-        console.log(`[FREEZE ${componentName} ON ${component.location}]`);
-        await freezeComponent(component);
+        console.log(`[JOIN ${componentName} ON ${component.location}]`);
+        await joinComponent(component);
     }
 }
 
 /**
- * unfreeze all service and libraries 
+ * split mono-repo into multi-repos
  * @param {Config} config - configuration
  */
-async function unfreeze(config) {
+async function split(config) {
     // syncrhonize link
     await synchronizeLink(config);
     for (let componentName in config.components) {
@@ -267,10 +267,10 @@ async function unfreeze(config) {
             continue;
         }
         if (!fs.existsSync(getComponentFrozenGitLocation(component))) {
-            throw new Error("Component exists, but no git info available, please unfreeze");
+            throw new Error("Component exists, but no git info available, please join");
         }
-        console.log(`[UNFREEZE ${componentName} ON ${component.location}]`);
-        await unfreezeComponent(component);
+        console.log(`[SPLIT ${componentName} ON ${component.location}]`);
+        await splitComponent(component);
     }
 }
 
@@ -403,11 +403,11 @@ async function main() {
     const args = process.argv.slice(3);
     const config = yaml.safeLoad(fs.readFileSync(configPath, "utf8"));
     switch (command) {
-        case "unfreeze":
-            await unfreeze(config);
+        case "split":
+            await split(config);
             break;
-        case "freeze":
-            await freeze(config);
+        case "join":
+            await join(config);
             break;
         case "pull":
             await pull(config);
